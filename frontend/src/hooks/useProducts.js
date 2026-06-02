@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
+import api from '../utils/api';
 const useProducts = (params = {}) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);

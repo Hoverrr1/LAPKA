@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import { useCart } from '../context/CartContext';
 import { FaCartPlus, FaLeaf, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { getProductDescription, getProductLabel, getProductName } from '../config/productTranslations';

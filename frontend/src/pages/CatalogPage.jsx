@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FaBoxOpen, FaFilter, FaLeaf, FaSearch, FaTimes } from 'react-icons/fa';
 import ProductCard from '../components/ProductCard';

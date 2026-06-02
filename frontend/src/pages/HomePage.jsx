@@ -5,7 +5,7 @@ import BenefitsSection from '../components/BenefitsSection';
 import TestimonialsSection from '../components/TestimonialsSection';
 import NewsletterSection from '../components/NewsletterSection';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { motion } from 'framer-motion';
 
 const categories = ['Food', 'Toys', 'Eco-Friendly', 'Accessories', 'Health', 'Grooming'];
