@@ -11,7 +11,7 @@ const useProducts = (params = {}) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await axios.get('/api/v1/products', { params });
+        const res = await api.get('/api/v1/products', { params });
         setProducts(res.data.data);
         setCount(res.data.count);
         setPages(res.data.pages);

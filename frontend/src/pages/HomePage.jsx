@@ -18,7 +18,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const res = await axios.get('/api/v1/products', {
+        const res = await api.get('/api/v1/products', {
           params: {
             limit: 8,
             ecoFriendly: true,

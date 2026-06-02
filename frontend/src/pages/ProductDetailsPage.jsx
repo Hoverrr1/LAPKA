@@ -16,7 +16,7 @@ const ProductDetailsPage = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`/api/v1/products/${id}`);
+        const res = await api.get(`/api/v1/products/${id}`);
         setProduct(res.data.data);
       } catch (err) {
         setError('Не вдалося завантажити деталі товару');

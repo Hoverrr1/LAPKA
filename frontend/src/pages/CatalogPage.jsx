@@ -128,7 +128,7 @@ const CatalogPage = () => {
       try {
         setLoading(true);
         setError('');
-        const response = await axios.get('/api/v1/products', {
+        const response = await api.get('/api/v1/products', {
           params: requestParams,
           signal: controller.signal,
         });

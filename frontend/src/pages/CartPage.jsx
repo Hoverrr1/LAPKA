@@ -189,7 +189,7 @@ const CartPage = () => {
       };
 
       // Create order via API
-      const { data } = await axios.post('/api/v1/orders', orderData);
+      const { data } = await api.post('/api/v1/orders', orderData);
 
       if (data.success) {
         // Show success modal

@@ -12,7 +12,7 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await axios.get('/api/v1/cart');
+        const res = await api.get('/api/v1/cart');
         setCart(res.data.data);
       } catch (err) {
         console.error('Failed to fetch cart:', err);
@@ -29,7 +29,7 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post('/api/v1/cart', { productId, quantity });
+      const res = await api.post('/api/v1/cart', { productId, quantity });
       setCart(res.data.data);
       return res.data.data;
     } catch (err) {
@@ -43,7 +43,7 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.put(`/api/v1/cart/${itemId}`, { quantity });
+      const res = await api.put(`/api/v1/cart/${itemId}`, { quantity });
       setCart(res.data.data);
       return res.data.data;
     } catch (err) {
@@ -57,7 +57,7 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.delete(`/api/v1/cart/${itemId}`);
+      const res = await api.delete(`/api/v1/cart/${itemId}`);
       setCart(res.data.data);
       return res.data.data;
     } catch (err) {
@@ -71,7 +71,7 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      await axios.delete('/api/v1/cart');
+      await api.delete('/api/v1/cart');
       setCart(null);
     } catch (err) {
       throw new Error(err.response?.data?.error || 'Не вдалося очистити кошик');

@@ -91,10 +91,10 @@ const labels = {
 };
 
 const getAllProducts = async () => {
-  const first = await axios.get('/api/v1/products', { params: { page: 1, limit: 100 } });
+  const first = await api.get('/api/v1/products', { params: { page: 1, limit: 100 } });
   const products = [...(first.data.data || [])];
   for (let page = 2; page <= first.data.pages; page += 1) {
-    const response = await axios.get('/api/v1/products', { params: { page, limit: 100 } });
+    const response = await api.get('/api/v1/products', { params: { page, limit: 100 } });
     products.push(...(response.data.data || []));
   }
   return products;
@@ -132,7 +132,7 @@ const AdminPage = () => {
         setLoading(true);
         const [allProducts, ordersResponse] = await Promise.all([
           getAllProducts(),
-          axios.get('/api/v1/orders/admin'),
+          api.get('/api/v1/orders/admin'),
         ]);
         setProducts(allProducts);
         setOrders(ordersResponse.data.data || []);
@@ -203,7 +203,7 @@ const AdminPage = () => {
       setUploadingImage(true);
       const formData = new FormData();
       formData.append('image', file);
-      const response = await axios.post('/api/v1/upload/product', formData, {
+      const response = await api.post('/api/v1/upload/product', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setProductForm((current) => ({ ...current, image: response.data.imageUrl }));
@@ -225,11 +225,11 @@ const AdminPage = () => {
     try {
       setSubmitting(true);
       if (editingProduct) {
-        const response = await axios.put(`/api/v1/products/${editingProduct._id}`, productForm);
+        const response = await api.put(`/api/v1/products/${editingProduct._id}`, productForm);
         setProducts((current) => current.map((product) => product._id === editingProduct._id ? response.data.data : product));
         showToast('Товар успішно оновлено');
       } else {
-        const response = await axios.post('/api/v1/products', productForm);
+        const response = await api.post('/api/v1/products', productForm);
         setProducts((current) => [response.data.data, ...current]);
         showToast('Товар успішно додано');
       }
@@ -252,7 +252,7 @@ const AdminPage = () => {
     if (!productToDelete) return;
     try {
       setDeleting(true);
-      await axios.delete(`/api/v1/products/${productToDelete._id}`);
+      await api.delete(`/api/v1/products/${productToDelete._id}`);
       setProducts((current) => current.filter((product) => product._id !== productToDelete._id));
       showToast('Товар видалено');
       setProductToDelete(null);
@@ -265,7 +265,7 @@ const AdminPage = () => {
 
   const handleStatusChange = async (orderId, status) => {
     try {
-      await axios.put(`/api/v1/orders/${orderId}/status`, { status });
+      await api.put(`/api/v1/orders/${orderId}/status`, { status });
       setOrders((current) => current.map((order) => order._id === orderId ? { ...order, status } : order));
       showToast('Статус замовлення оновлено');
     } catch (err) {
@@ -277,7 +277,7 @@ const AdminPage = () => {
     if (!orderToDelete) return;
     try {
       setDeletingOrder(true);
-      await axios.delete(`/api/v1/orders/${orderToDelete._id}`);
+      await api.delete(`/api/v1/orders/${orderToDelete._id}`);
       setOrders((current) => current.filter((order) => order._id !== orderToDelete._id));
       showToast('Замовлення видалено');
       setOrderToDelete(null);

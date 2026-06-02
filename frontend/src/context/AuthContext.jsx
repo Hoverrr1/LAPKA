@@ -23,15 +23,15 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
 
         if (token) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-          const res = await axios.get('/api/v1/auth/me');
+          const res = await api.get('/api/v1/auth/me');
           setUser(res.data.data || res.data.user);
         }
       } catch (err) {
         console.error('Auth check failed:', err);
         localStorage.removeItem('token');
-        delete axios.defaults.headers.common['Authorization'];
+        delete api.defaults.headers.common['Authorization'];
         setUser(null);
       } finally {
         setLoading(false);
@@ -50,10 +50,10 @@ export const AuthProvider = ({ children }) => {
       const { adminCode, ...registerData } = userData;
       const requestBody = adminCode ? { ...registerData, adminCode } : registerData;
 
-      const res = await axios.post('/api/v1/auth/register', requestBody);
+      const res = await api.post('/api/v1/auth/register', requestBody);
 
       localStorage.setItem('token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
 
       setUser(res.data.data || res.data.user);
 
@@ -70,10 +70,10 @@ export const AuthProvider = ({ children }) => {
     setError(null);
 
     try {
-      const res = await axios.post('/api/v1/auth/login', credentials);
+      const res = await api.post('/api/v1/auth/login', credentials);
 
       localStorage.setItem('token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
 
       setUser(res.data.data || res.data.user);
 
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
     navigate('/login');
   };
