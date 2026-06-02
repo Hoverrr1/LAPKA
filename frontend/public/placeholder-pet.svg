@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D1FAE5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A7F3D0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#grad)"/>
+  
+  <!-- Paw print placeholder -->
+  <g transform="translate(200, 200)">
+    <!-- Main paw -->
+    <circle cx="0" cy="0" r="45" fill="#34D399" opacity="0.3"/>
+    
+    <!-- Toe pads -->
+    <circle cx="-45" cy="-40" r="18" fill="#34D399" opacity="0.5"/>
+    <circle cx="0" cy="-50" r="18" fill="#34D399" opacity="0.5"/>
+    <circle cx="45" cy="-40" r="18" fill="#34D399" opacity="0.5"/>
+    <circle cx="-35" cy="25" r="15" fill="#34D399" opacity="0.4"/>
+    <circle cx="35" cy="25" r="15" fill="#34D399" opacity="0.4"/>
+    
+    <!-- Leaf accent -->
+    <path d="M -15,-15 Q 0,-25 15,-15 Q 10,0 5,10 Q 0,5 -5,10 Q -10,0 -15,-15" fill="#10B981" opacity="0.4"/>
+  </g>
+  
+  <text x="200" y="350" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#059669" opacity="0.6">
+    Зображення не доступне
+  </text>
+</svg>

@@ -1,0 +1,34 @@
+{
+  "name": "eco-pet-shop-backend",
+  "version": "1.0.0",
+  "description": "Backend for Eco Pet Shop MERN application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server",
+    "dev": "nodemon server",
+    "seed": "node seeder",
+    "seed-destroy": "node seeder -d",
+    "assign-images": "node utils/assignCatalogImages",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "colors": "^1.4.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.4.3",
+    "morgan": "^1.10.0",
+    "nodemailer": "^8.0.10",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
