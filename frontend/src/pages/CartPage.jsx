@@ -19,6 +19,8 @@ import { motion } from 'framer-motion';
 import Modal from '../components/Modal';
 import { useToast, ToastContainer } from '../components/Toast';
 import { getProductName } from '../config/productTranslations';
+import OptimizedImage from '../components/OptimizedImage';
+import { getProductImageUrl } from '../utils/unsplashImages';
 
 const CartPage = () => {
   const { cart, loading, error, updateCartItem, removeFromCart, clearCart, getCartTotal } = useCart();
@@ -181,7 +183,7 @@ const CartPage = () => {
         items: cart.items.map((item) => ({
           product: item.product._id,
           name: getProductName(item.product),
-          image: item.product.image,
+          image: getProductImageUrl(item.product, 'full'),
           quantity: item.quantity,
           price: item.price,
         })),
@@ -362,12 +364,10 @@ const CartPage = () => {
                       whileHover={{ scale: 1.05 }}
                       className="flex-shrink-0"
                     >
-                      <img
-                        src={item.product.image}
+                      <OptimizedImage
+                        product={item.product}
                         alt={getProductName(item.product)}
-                        onError={(e) => {
-                          e.target.src = '/placeholder-pet.svg';
-                        }}
+                        variant="preview"
                         className="w-24 h-24 object-cover rounded-xl"
                       />
                     </motion.div>

@@ -26,6 +26,11 @@ const errorHandler = (err, req, res, next) => {
     error = new ErrorResponse(message, 400);
   }
 
+  // Upload validation error
+  if (err.name === 'MulterError' && err.code === 'LIMIT_FILE_SIZE') {
+    error = new ErrorResponse('Фото не може бути більшим за 5MB', 400);
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     error: error.message || 'Server Error',

@@ -1,6 +1,8 @@
 const Product = require('../models/Product');
+const Photo = require('../models/Photo');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
+const { getProductImageUrl } = require('../utils/unsplashImages');
 
 const FILTER_FIELDS = [
   'category',
@@ -18,6 +20,28 @@ const toList = (value) =>
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+
+const resolveProductImage = async (payload = {}) => {
+  const data = { ...payload };
+
+  if (data.photo === '' || data.photo === null) {
+    data.photo = null;
+  }
+
+  if (data.photo) {
+    const photo = await Photo.findById(data.photo);
+    if (!photo) throw new ErrorResponse('Вибране фото не знайдено', 404);
+    data.photo = photo._id;
+    data.image = photo.url;
+    return data;
+  }
+
+  if (!data.image) {
+    data.image = getProductImageUrl(data);
+  }
+
+  return data;
+};
 
 exports.getProducts = asyncHandler(async (req, res) => {
   const {
@@ -64,6 +88,7 @@ exports.getProducts = asyncHandler(async (req, res) => {
   const pageSize = Math.min(Math.max(Number(limit) || 50, 1), 100);
   const [products, count] = await Promise.all([
     Product.find(query)
+      .populate('photo')
       .sort({ createdAt: -1 })
       .limit(pageSize)
       .skip((pageNumber - 1) * pageSize),
@@ -79,21 +104,24 @@ exports.getProducts = asyncHandler(async (req, res) => {
 });
 
 exports.getProduct = asyncHandler(async (req, res, next) => {
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).populate('photo');
   if (!product) return next(new ErrorResponse(`Товар з id ${req.params.id} не знайдено`, 404));
   res.status(200).json({ success: true, data: product });
 });
 
 exports.createProduct = asyncHandler(async (req, res) => {
-  const product = await Product.create(req.body);
+  const productData = await resolveProductImage(req.body);
+  const product = await Product.create(productData);
+  await product.populate('photo');
   res.status(201).json({ success: true, data: product });
 });
 
 exports.updateProduct = asyncHandler(async (req, res, next) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+  const productData = await resolveProductImage(req.body);
+  const product = await Product.findByIdAndUpdate(req.params.id, productData, {
     new: true,
     runValidators: true,
-  });
+  }).populate('photo');
   if (!product) return next(new ErrorResponse(`Товар з id ${req.params.id} не знайдено`, 404));
   res.status(200).json({ success: true, data: product });
 });

@@ -6,11 +6,13 @@ import {
   FaCheck,
   FaEdit,
   FaEye,
+  FaImage,
   FaPaperPlane,
   FaSearch,
   FaShoppingBag,
   FaSpinner,
   FaTrash,
+  FaUpload,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
@@ -19,6 +21,8 @@ import ProductImageUpload from '../components/ProductImageUpload';
 import { ToastContainer, useToast } from '../components/Toast';
 import { getProductLabel, getProductName } from '../config/productTranslations';
 import { getProductDescription } from '../config/productTranslations';
+import OptimizedImage from '../components/OptimizedImage';
+import { getProductImageUrl } from '../utils/unsplashImages';
 import {
   Field,
   inputClass,
@@ -45,6 +49,7 @@ const EMPTY_PRODUCT = {
   rating: '',
   reviews: '',
   image: '',
+  photo: '',
   stock: '',
   ecoFriendly: false,
 };
@@ -107,19 +112,20 @@ const AdminPage = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingOrder, setDeletingOrder] = useState(false);
   const [search, setSearch] = useState('');
   const [productForm, setProductForm] = useState({ ...EMPTY_PRODUCT });
+  const [photoForm, setPhotoForm] = useState({ name: '', altText: '', image: null });
+  const [photoPreview, setPhotoPreview] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [imageError, setImageError] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [localImagePreview, setLocalImagePreview] = useState('');
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -130,12 +136,14 @@ const AdminPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [allProducts, ordersResponse] = await Promise.all([
+        const [allProducts, ordersResponse, photosResponse] = await Promise.all([
           getAllProducts(),
           api.get('/api/v1/orders/admin'),
+          api.get('/api/v1/photos'),
         ]);
         setProducts(allProducts);
         setOrders(ordersResponse.data.data || []);
+        setPhotos(photosResponse.data.data || []);
       } catch (err) {
         showToast(err.response?.data?.error || 'Не вдалося завантажити дані адмін-панелі', 'error');
       } finally {
@@ -146,11 +154,9 @@ const AdminPage = () => {
     fetchData();
   }, [navigate, showToast, user]);
 
-  useEffect(() => setImageError(false), [productForm.image]);
-
   useEffect(() => () => {
-    if (localImagePreview) URL.revokeObjectURL(localImagePreview);
-  }, [localImagePreview]);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+  }, [photoPreview]);
 
   const stats = useMemo(() => ({
     total: products.length,
@@ -173,8 +179,6 @@ const AdminPage = () => {
   const resetForm = () => {
     setProductForm({ ...EMPTY_PRODUCT });
     setEditingProduct(null);
-    setImageError(false);
-    setLocalImagePreview('');
   };
 
   const handleInputChange = ({ target }) => {
@@ -192,44 +196,90 @@ const AdminPage = () => {
       }));
       return;
     }
-    if (name === 'image') setLocalImagePreview('');
+    if (name === 'photo') {
+      const selectedPhoto = photos.find((photo) => photo._id === value);
+      setProductForm((current) => ({
+        ...current,
+        photo: value,
+        image: selectedPhoto?.url || current.image,
+      }));
+      return;
+    }
     setProductForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleImageUpload = async (file) => {
-    const preview = URL.createObjectURL(file);
-    setLocalImagePreview(preview);
+  const handlePhotoFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoForm((current) => ({ ...current, image: file }));
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const resetPhotoForm = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoForm({ name: '', altText: '', image: null });
+    setPhotoPreview('');
+  };
+
+  const handleCreatePhoto = async (event) => {
+    event.preventDefault();
+    if (!photoForm.name.trim()) {
+      showToast('Вкажіть назву фото', 'error');
+      return;
+    }
+    if (!photoForm.image) {
+      showToast('Виберіть фото', 'error');
+      return;
+    }
+
     try {
-      setUploadingImage(true);
+      setUploadingPhoto(true);
       const formData = new FormData();
-      formData.append('image', file);
-      const response = await api.post('/api/v1/upload/product', formData, {
+      formData.append('name', photoForm.name.trim());
+      formData.append('altText', photoForm.altText.trim());
+      formData.append('image', photoForm.image);
+      const response = await api.post('/api/v1/photos', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setProductForm((current) => ({ ...current, image: response.data.imageUrl }));
-      showToast('Фото успішно завантажено');
+      setPhotos((current) => [response.data.data, ...current]);
+      showToast('Фото успішно додано');
+      resetPhotoForm();
     } catch (err) {
-      setLocalImagePreview('');
       showToast(err.response?.data?.error || 'Не вдалося завантажити фото', 'error');
     } finally {
-      setUploadingImage(false);
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoId) => {
+    try {
+      await api.delete(`/api/v1/photos/${photoId}`);
+      setPhotos((current) => current.filter((photo) => photo._id !== photoId));
+      setProducts((current) => current.map((product) => (
+        (product.photo?._id || product.photo) === photoId ? { ...product, photo: null } : product
+      )));
+      if (productForm.photo === photoId) setProductForm((current) => ({ ...current, photo: '' }));
+      showToast('Фото видалено');
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Не вдалося видалити фото', 'error');
     }
   };
 
   const handleSubmitProduct = async (event) => {
     event.preventDefault();
-    if (uploadingImage) {
-      showToast('Зачекайте, поки фото завершить завантаження', 'warning');
-      return;
-    }
     try {
       setSubmitting(true);
+      const normalizedProductForm = {
+        ...productForm,
+        image: photos.find((photo) => photo._id === productForm.photo)?.url || productForm.image || getProductImageUrl(productForm, 'full'),
+      };
       if (editingProduct) {
-        const response = await api.put(`/api/v1/products/${editingProduct._id}`, productForm);
+        const response = await api.put(`/api/v1/products/${editingProduct._id}`, normalizedProductForm);
         setProducts((current) => current.map((product) => product._id === editingProduct._id ? response.data.data : product));
         showToast('Товар успішно оновлено');
       } else {
-        const response = await api.post('/api/v1/products', productForm);
+        const response = await api.post('/api/v1/products', normalizedProductForm);
         setProducts((current) => [response.data.data, ...current]);
         showToast('Товар успішно додано');
       }
@@ -243,8 +293,13 @@ const AdminPage = () => {
 
   const handleEditProduct = (product) => {
     setEditingProduct(product);
-    setProductForm({ ...EMPTY_PRODUCT, ...product, name: getProductName(product), description: getProductDescription(product) });
-    setLocalImagePreview('');
+    setProductForm({
+      ...EMPTY_PRODUCT,
+      ...product,
+      photo: product.photo?._id || product.photo || '',
+      name: getProductName(product),
+      description: getProductDescription(product),
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -300,6 +355,7 @@ const AdminPage = () => {
           </div>
           <div className="flex rounded-2xl border border-white bg-white/80 p-1 shadow-soft backdrop-blur">
             <button onClick={() => setActiveTab('products')} className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === 'products' ? 'bg-primary text-white shadow-soft' : 'text-slate-500 hover:text-primary'}`}><FaBox /> Товари</button>
+            <button onClick={() => setActiveTab('photos')} className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === 'photos' ? 'bg-primary text-white shadow-soft' : 'text-slate-500 hover:text-primary'}`}><FaImage /> Фото</button>
             <button onClick={() => setActiveTab('orders')} className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${activeTab === 'orders' ? 'bg-primary text-white shadow-soft' : 'text-slate-500 hover:text-primary'}`}><FaShoppingBag /> Замовлення</button>
           </div>
         </div>
@@ -334,7 +390,13 @@ const AdminPage = () => {
                   <Field label="Ціна, ₴"><input type="number" name="price" value={productForm.price} onChange={handleInputChange} className={inputClass} min="0" step="0.01" required /></Field>
                   <Field label="Кількість на складі"><input type="number" name="stock" value={productForm.stock} onChange={handleInputChange} className={inputClass} min="0" required /></Field>
                   <Field label="Підкатегорія"><input name="subcategory" value={productForm.subcategory} onChange={handleInputChange} className={inputClass} placeholder="Наприклад, ласощі" /></Field>
-                  <Field label="URL зображення" hint="Можна залишити ручне посилання як резервний варіант."><input type="text" name="image" value={productForm.image} onChange={handleInputChange} className={inputClass} placeholder="https://... або /placeholder-pet.svg" /></Field>
+                  <Field label="Оберіть фото з бібліотеки">
+                    <select name="photo" value={productForm.photo || ''} onChange={handleInputChange} className={inputClass}>
+                      <option value="">Без фото з бібліотеки</option>
+                      {photos.map((photo) => <option key={photo._id} value={photo._id}>{photo.name}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Image URL fallback" hint="Необов'язково. Використовується, якщо фото з бібліотеки не вибрано."><input type="text" name="image" value={productForm.image} onChange={handleInputChange} className={inputClass} placeholder="https://res.cloudinary.com/..." /></Field>
                   {dynamicFields.map((field) => (
                     <SelectField key={field} label={labels[field]} name={field} value={productForm[field]} options={field === 'type' ? OPTIONS.type[productForm.category] : OPTIONS[field]} onChange={handleInputChange} />
                   ))}
@@ -351,11 +413,7 @@ const AdminPage = () => {
 
                 <aside>
                   <ProductImageUpload
-                    previewUrl={localImagePreview || (!imageError ? productForm.image : '')}
-                    uploading={uploadingImage}
-                    onSelectFile={handleImageUpload}
-                    onValidationError={(message) => showToast(message, 'error')}
-                    onPreviewError={() => setImageError(true)}
+                    previewUrl={productForm.image || getProductImageUrl(productForm, 'preview')}
                   />
                 </aside>
               </form>
@@ -376,7 +434,7 @@ const AdminPage = () => {
                     <tbody>
                       {filteredProducts.map((product, index) => (
                         <tr key={product._id} className={`border-b border-slate-100 transition hover:bg-emerald-50/70 ${index % 2 ? 'bg-slate-50/40' : 'bg-white/40'}`}>
-                          <td className="px-5 py-4"><div className="flex items-center gap-3"><img src={product.image || '/placeholder-pet.svg'} alt="" className="h-11 w-11 rounded-xl bg-emerald-50 object-cover" /><div><p className="max-w-xs truncate text-sm font-bold text-slate-800">{getProductName(product)}</p><p className="mt-1 text-xs text-slate-400">{getProductLabel(product.type || product.subcategory) || 'Без підкатегорії'}</p></div></div></td>
+                          <td className="px-5 py-4"><div className="flex items-center gap-3"><OptimizedImage product={product} alt="" variant="preview" className="h-11 w-11 rounded-xl bg-emerald-50 object-cover" /><div><p className="max-w-xs truncate text-sm font-bold text-slate-800">{getProductName(product)}</p><p className="mt-1 text-xs text-slate-400">{getProductLabel(product.type || product.subcategory) || 'Без підкатегорії'}</p></div></div></td>
                           <td className="px-5 py-4"><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600">{getProductLabel(product.category)}</span></td>
                           <td className="px-5 py-4 text-sm font-extrabold text-primary">{Number(product.price).toFixed(2)} ₴</td>
                           <td className="px-5 py-4"><StockBadge stock={product.stock} /></td>
@@ -389,6 +447,67 @@ const AdminPage = () => {
               </div>
             </section>
           </>
+        ) : activeTab === 'photos' ? (
+          <section className="overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-5 shadow-large backdrop-blur-xl sm:p-7">
+            <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Медіабібліотека</p>
+                <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Керування фото</h2>
+                <p className="mt-1 text-sm text-slate-500">Завантажуйте фото у Cloudinary та використовуйте їх у товарах.</p>
+              </div>
+              <span className="rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-primary">Фото: {photos.length}</span>
+            </div>
+
+            <form onSubmit={handleCreatePhoto} className="mb-8 grid gap-5 rounded-3xl border border-slate-100 bg-white/80 p-5 shadow-soft lg:grid-cols-[18rem_1fr]">
+              <div className="overflow-hidden rounded-3xl border border-slate-100 bg-emerald-50">
+                {photoPreview ? (
+                  <OptimizedImage src={photoPreview} alt="Попередній перегляд фото" variant="preview" className="h-56 w-full object-cover" />
+                ) : (
+                  <div className="grid h-56 place-items-center text-center text-emerald-700/50">
+                    <div>
+                      <FaImage className="mx-auto text-4xl" />
+                      <p className="mt-3 px-4 text-xs font-semibold">Попередній перегляд фото</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Назва фото"><input value={photoForm.name} onChange={(event) => setPhotoForm((current) => ({ ...current, name: event.target.value }))} className={inputClass} placeholder="Наприклад, Фото корму" required /></Field>
+                <Field label="Alt text"><input value={photoForm.altText} onChange={(event) => setPhotoForm((current) => ({ ...current, altText: event.target.value }))} className={inputClass} placeholder="Опис фото для доступності" /></Field>
+                <Field label="Вибрати фото" className="sm:col-span-2">
+                  <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={handlePhotoFileChange} className={inputClass} />
+                </Field>
+                <div className="flex flex-wrap gap-3 sm:col-span-2">
+                  <button type="submit" disabled={uploadingPhoto} className="btn-primary inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:bg-slate-300">
+                    {uploadingPhoto ? <FaSpinner className="animate-spin" /> : <FaUpload />}
+                    {uploadingPhoto ? 'Завантаження...' : 'Завантажити'}
+                  </button>
+                  <button type="button" onClick={resetPhotoForm} className="btn-outline">Очистити</button>
+                </div>
+              </div>
+            </form>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {photos.map((photo) => (
+                <article key={photo._id} className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-medium">
+                  <OptimizedImage src={photo.url} alt={photo.altText || photo.name} variant="preview" className="h-44 w-full object-cover" />
+                  <div className="p-4">
+                    <p className="truncate text-sm font-extrabold text-slate-800">{photo.name}</p>
+                    <p className="mt-1 truncate text-xs text-slate-400">{photo.altText || 'Alt text не вказано'}</p>
+                    <button type="button" onClick={() => handleDeletePhoto(photo._id)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100">
+                      <FaTrash /> Видалити фото
+                    </button>
+                  </div>
+                </article>
+              ))}
+              {!photos.length && (
+                <div className="col-span-full rounded-3xl border border-dashed border-slate-200 bg-white/70 p-8 text-center text-sm font-semibold text-slate-400">
+                  У бібліотеці ще немає фото.
+                </div>
+              )}
+            </div>
+          </section>
         ) : (
           <section className="overflow-hidden rounded-3xl border border-white/80 bg-white/80 shadow-large backdrop-blur-xl">
             <div className="border-b border-slate-100 p-5"><h2 className="text-xl font-extrabold text-slate-900">Замовлення</h2><p className="mt-1 text-xs text-slate-400">Усього: {orders.length}</p></div>

@@ -6,6 +6,7 @@ dotenv.config({ path: './.env' });
 
 const Product = require('./models/Product');
 const User = require('./models/User');
+const { getProductImageUrl } = require('./utils/unsplashImages');
 
 mongoose.connect(process.env.MONGO_URI);
 
@@ -21,7 +22,7 @@ const makeProduct = (name, description, price, category, index, extra = {}) => (
   description,
   price,
   category,
-  image: '',
+  image: getProductImageUrl({ name, category }),
   stock: index % 9 === 0 ? 0 : 12 + (index * 7) % 73,
   rating: Number((4.1 + (index % 9) / 10).toFixed(1)),
   reviews: 18 + (index * 13) % 130,

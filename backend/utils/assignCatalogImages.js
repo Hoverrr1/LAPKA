@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 require('colors');
 const Product = require('../models/Product');
+const { getProductImageUrl } = require('./unsplashImages');
 
 const food = [
   ['photo_9_2026-06-02_16-37-53.jpg', 'Сухий корм Lasun для собак', 'Сухий', 'Собаки', 'Дорослі', 'Яловичина'],
@@ -117,9 +118,6 @@ const eco = [
   ['photo_29_2026-06-02_16-37-39.jpg', 'Будиночок із переробленого текстилю', 'Recycled products', 'Recycled plastic'],
 ];
 
-const imageUrl = (filename) =>
-  `${process.env.PUBLIC_BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`}/uploads/products/${filename}`;
-
 const records = {
   Food: food.map(([file, name, type, petType, ageGroup, flavor]) => ({
     file, name, type, petType, ageGroup, flavor,
@@ -142,12 +140,12 @@ const numberAtEnd = (name) => Number(String(name).match(/(\d+)$/)?.[1] || 0);
 
 const assignCategory = async (category, assignments) => {
   const categoryProducts = await Product.find({ category });
-  const assignedProducts = assignments.map((assignment) =>
-    categoryProducts.find((product) => product.image.endsWith(`/uploads/products/${assignment.file}`))
-  );
-  const products = assignedProducts.every(Boolean) ? assignedProducts : categoryProducts
+  const generatedProducts = categoryProducts
     .filter((product) => numberAtEnd(product.name) > 0)
     .sort((a, b) => numberAtEnd(a.name) - numberAtEnd(b.name));
+  const products = generatedProducts.length === assignments.length
+    ? generatedProducts
+    : categoryProducts.slice(0, assignments.length);
 
   if (products.length !== assignments.length) {
     throw new Error(`Expected ${assignments.length} generated ${category} products, found ${products.length}`);
@@ -158,7 +156,7 @@ const assignCategory = async (category, assignments) => {
     const update = {
       name: assignment.name,
       description: `${assignment.name}. Якісний товар для щоденного догляду за домашнім улюбленцем.`,
-      image: imageUrl(assignment.file),
+      image: getProductImageUrl({ ...assignment, category, _id: products[index]._id }),
       subcategory: assignment.type,
       type: assignment.type,
       ecoFriendly: Boolean(assignment.ecoFriendly),

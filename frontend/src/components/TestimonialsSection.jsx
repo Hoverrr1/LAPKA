@@ -1,30 +1,32 @@
 import { motion } from 'framer-motion';
 import { FaStar } from 'react-icons/fa';
+import OptimizedImage from './OptimizedImage';
+import { UNSPLASH_IMAGES } from '../utils/unsplashImages';
 
 const testimonials = [
   {
     name: 'Марія Петренко',
     review: 'Відличний сервіс! Мій кіт абсолютно закоханий у іграшки. Дуже задоволена якістю!',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria'
+    avatar: `https://images.unsplash.com/${UNSPLASH_IMAGES.Testimonials[0]}`
   },
   {
     name: 'Сергій Коваленко',
     review: 'Товари екологічні, безпечні для мого собаки. Доставка була швидкою. Рекомендую!',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sergiy'
+    avatar: `https://images.unsplash.com/${UNSPLASH_IMAGES.Testimonials[1]}`
   },
   {
     name: 'Олена Іванова',
     review: 'Ціни справедливі, якість на висоті. Буду замовляти ще. Спасибі EcoPetShop!',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Olena'
+    avatar: `https://images.unsplash.com/${UNSPLASH_IMAGES.Testimonials[2]}`
   },
   {
     name: 'Артем Сидоренко',
     review: 'Мій кіт дуже активний з вашими іграшками. Батьки вдячні за чистоту та безпеку!',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Artem'
+    avatar: `https://images.unsplash.com/${UNSPLASH_IMAGES.Testimonials[3]}`
   },
 ];
 
@@ -87,9 +89,10 @@ const TestimonialsSection = () => {
 
               {/* User Info */}
               <div className="flex items-center gap-3">
-                <img
+                <OptimizedImage
                   src={testimonial.avatar}
                   alt={testimonial.name}
+                  variant="preview"
                   className="w-12 h-12 rounded-full object-cover"
                 />
                 <div>

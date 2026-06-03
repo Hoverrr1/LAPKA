@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FaPaw, FaLeaf, FaShoppingBag, FaStar } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import OptimizedImage from './OptimizedImage';
 
 const HeroSection = () => {
   return (
@@ -136,14 +137,13 @@ const HeroSection = () => {
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity }}
               >
-                <img
-                  src="/logo.png"
+                <OptimizedImage
+                  src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b"
                   alt="EcoPetShop"
-                  className="w-full h-full object-contain"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.target.src = '/placeholder-pet.svg';
-                  }}
+                  variant="full"
+                  sizes="(max-width: 1024px) 100vw, 520px"
+                  fetchPriority="high"
+                  className="w-full h-full rounded-3xl object-cover"
                 />
               </motion.div>
 

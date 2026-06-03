@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import { FaCartPlus, FaHeart, FaLeaf, FaRegHeart, FaStar } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { getProductLabel, getProductName } from '../config/productTranslations';
+import OptimizedImage from './OptimizedImage';
+import { UNSPLASH_FALLBACK_IMAGE } from '../utils/unsplashImages';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const [wishlisted, setWishlisted] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const outOfStock = product.stock < 1;
   const rating = Math.round(product.rating || 0);
 
@@ -31,7 +32,12 @@ const ProductCard = ({ product }) => {
     <motion.article whileHover={{ y: -7 }} transition={{ duration: 0.25 }} className="group overflow-hidden rounded-3xl border border-white/80 bg-white shadow-soft transition-shadow hover:shadow-large">
       <Link to={`/products/${product._id}`} className="block">
         <div className="relative h-60 overflow-hidden bg-emerald-50">
-          <img src={imageError || !product.image ? '/placeholder-pet.svg' : product.image} alt={getProductName(product)} onError={() => setImageError(true)} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
+          <OptimizedImage
+            src={product.image || product.photo?.url || UNSPLASH_FALLBACK_IMAGE}
+            variant="preview"
+            alt={getProductName(product)}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             {product.ecoFriendly && <span className="eco-badge gap-1"><FaLeaf /> Еко</span>}
             {outOfStock && <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-bold text-white">Немає в наявності</span>}

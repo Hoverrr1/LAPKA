@@ -7,6 +7,7 @@ import {
   FaUser,
 } from 'react-icons/fa';
 import { translateProductText } from '../config/productTranslations';
+import OptimizedImage from './OptimizedImage';
 
 const statusLabels = {
   pending: 'Очікує обробки',
@@ -106,7 +107,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                   {items.map((item) => (
                     <div key={item._id || item.product?._id || item.name} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex min-w-0 items-center gap-3">
-                        <img src={item.image || item.product?.image || '/placeholder-pet.svg'} alt="" className="h-14 w-14 flex-none rounded-xl bg-emerald-50 object-cover" />
+                        <OptimizedImage src={item.image || item.product?.image} alt="" variant="preview" className="h-14 w-14 flex-none rounded-xl bg-emerald-50 object-cover" />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-bold text-slate-800">{translateProductText(item.name || item.product?.name || 'Товар')}</p>
                           <p className="mt-1 text-xs text-slate-400">Кількість: {item.quantity}</p>

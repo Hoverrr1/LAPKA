@@ -4,6 +4,7 @@ import api from '../utils/api';
 import { useCart } from '../context/CartContext';
 import { FaCartPlus, FaLeaf, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { getProductDescription, getProductLabel, getProductName } from '../config/productTranslations';
+import OptimizedImage from '../components/OptimizedImage';
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -86,9 +87,12 @@ const ProductDetailsPage = () => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="md:flex">
           <div className="md:w-1/2">
-            <img
-              src={product.image || '/placeholder-pet.svg'}
+            <OptimizedImage
+              product={product}
+              variant="full"
               alt={getProductName(product)}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              fetchPriority="high"
               className="w-full h-96 md:h-full object-cover"
             />
           </div>
