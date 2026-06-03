@@ -105,6 +105,14 @@ const getAllProducts = async () => {
   return products;
 };
 
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Не вдалося прочитати фото'));
+    reader.readAsDataURL(file);
+  });
+
 const AdminPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -211,6 +219,16 @@ const AdminPage = () => {
   const handlePhotoFileChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      showToast('Дозволені формати фото: JPG, JPEG, PNG або WEBP', 'error');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Фото не може бути більшим за 5MB', 'error');
+      event.target.value = '';
+      return;
+    }
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoForm((current) => ({ ...current, image: file }));
     setPhotoPreview(URL.createObjectURL(file));
@@ -235,12 +253,11 @@ const AdminPage = () => {
 
     try {
       setUploadingPhoto(true);
-      const formData = new FormData();
-      formData.append('name', photoForm.name.trim());
-      formData.append('altText', photoForm.altText.trim());
-      formData.append('image', photoForm.image);
-      const response = await api.post('/api/v1/photos', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const imageData = await readFileAsDataUrl(photoForm.image);
+      const response = await api.post('/api/v1/photos', {
+        name: photoForm.name.trim(),
+        altText: photoForm.altText.trim(),
+        imageData,
       });
       setPhotos((current) => [response.data.data, ...current]);
       showToast('Фото успішно додано');

@@ -14,6 +14,7 @@ const OptimizedImage = ({
   className = '',
   sizes = '(max-width: 768px) 100vw, 400px',
   fallbackSrc = UNSPLASH_FALLBACK_IMAGE,
+  fetchPriority,
   onError,
   ...props
 }) => {
@@ -29,6 +30,7 @@ const OptimizedImage = ({
       alt={alt}
       loading="lazy"
       decoding="async"
+      fetchpriority={fetchPriority}
       onError={(event) => {
         if (!failed) setFailed(true);
         onError?.(event);
